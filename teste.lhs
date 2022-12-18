@@ -1,7 +1,15 @@
 > import System.Random
-> import Control.Monad.State
-> import Data.Functor.Identity
 
+> data ItemCartela = ItemCartela {
+>     numero :: Int,
+>     ja_saiu :: Bool
+> } deriving (Eq, Show, Read)
+
+> data Jogador = Jogador {
+>     nome :: String,
+>     tipo_cartela :: String,
+>     cartela :: [[ItemCartela]]
+> } deriving (Eq, Show, Read)
 
 > shuffle gen [] = []
 > shuffle gen list = randomElem : shuffle newGen newList
@@ -35,3 +43,44 @@
 >                    return ()
 >                else 
 >                    calcula_turno (Game nova_rodada nova_lista)
+
+> preenche_cartela_aux_item :: [ItemCartela] -> Int -> Int -> IO([ItemCartela])
+> preenche_cartela_aux_item lista_item num_sorteado n = do 
+>                if n == 0 then 
+>                    return []
+>                else
+>                    do
+>                    let head_item = (head lista_item)
+>                    let tail_item = (tail lista_item)
+>                    lista_rec <- (preenche_cartela_aux_item tail_item num_sorteado (n-1))
+>                    if numero(head_item) == num_sorteado then
+>                        return ([(ItemCartela num_sorteado True)] ++ lista_rec)
+>                    else 
+>                        return ([head_item] ++ lista_rec)
+
+> preenche_cartela_aux_linha :: [[ItemCartela]] -> Int -> Int -> IO([[ItemCartela]])
+> preenche_cartela_aux_linha lista_linha num_sorteado n = do 
+>                if n == 0 then 
+>                    return []
+>                else
+>                    do
+>                    let head_linha = (head lista_linha)
+>                    let tail_linha = (tail lista_linha)
+>                    nova_linha <- (preenche_cartela_aux_item head_linha num_sorteado 5)
+>                    lista_rec <- (preenche_cartela_aux_linha tail_linha num_sorteado (n-1))
+>                    return ([nova_linha] ++ lista_rec)
+
+> preenche_cartela :: [Jogador] -> Int -> Int -> IO([Jogador])
+> preenche_cartela lista_jogadores num_sorteado n = do 
+>                if n == 0 then 
+>                    return []
+>                else
+>                    do
+>                    let head_jogador = (head lista_jogadores)
+>                    let tail_jogador = (tail lista_jogadores)
+>                    let old_cartela = cartela(head_jogador)
+>                    let nome_jogador = nome(head_jogador)
+>                    let tipo_cartela_jogador = tipo_cartela(head_jogador)
+>                    nova_cartela <- (preenche_cartela_aux_linha old_cartela num_sorteado 5)
+>                    lista_rec <- (preenche_cartela tail_jogador num_sorteado (n-1))
+>                    return ([(Jogador nome_jogador tipo_cartela_jogador nova_cartela)] ++ lista_rec)

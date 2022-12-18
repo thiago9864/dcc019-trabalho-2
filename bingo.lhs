@@ -91,15 +91,52 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 
 ------------------------- Turnos -----------------------------
 
-> preenche_cartela :: [Jogador] -> Int -> [Jogador]
-> preenche_cartela (head_jogador:tail_jogadores) num_sorteado = do 
->                let old_cartela  = cartela(head_jogador)
+> preenche_cartela_aux_item :: [ItemCartela] -> Int -> Int -> IO([ItemCartela])
+> preenche_cartela_aux_item lista_item num_sorteado n = do 
+>                if n == 0 then 
+>                    return []
+>                else
+>                    do
+>                    let head_item = (head lista_item)
+>                    let tail_item = (tail lista_item)
+>                    lista_rec <- (preenche_cartela_aux_item tail_item num_sorteado (n-1))
+>                    if numero(head_item) == num_sorteado then
+>                        return ([(ItemCartela num_sorteado True)] ++ lista_rec)
+>                    else 
+>                        return ([head_item] ++ lista_rec)
+
+> preenche_cartela_aux_linha :: [[ItemCartela]] -> Int -> Int -> IO([[ItemCartela]])
+> preenche_cartela_aux_linha lista_linha num_sorteado n = do 
+>                if n == 0 then 
+>                    return []
+>                else
+>                    do
+>                    let head_linha = (head lista_linha)
+>                    let tail_linha = (tail lista_linha)
+>                    nova_linha <- (preenche_cartela_aux_item head_linha num_sorteado 5)
+>                    lista_rec <- (preenche_cartela_aux_linha tail_linha num_sorteado (n-1))
+>                    return ([nova_linha] ++ lista_rec)
+
+> preenche_cartela :: [Jogador] -> Int -> Int -> IO([Jogador])
+> preenche_cartela lista_jogadores num_sorteado n = do 
+>                if n == 0 then 
+>                    return []
+>                else
+>                    do
+>                    let head_jogador = (head lista_jogadores)
+>                    let tail_jogador = (tail lista_jogadores)
+>                    let old_cartela = cartela(head_jogador)
+>                    let nome_jogador = nome(head_jogador)
+>                    let tipo_cartela_jogador = tipo_cartela(head_jogador)
+>                    nova_cartela <- (preenche_cartela_aux_linha old_cartela num_sorteado 5)
+>                    lista_rec <- (preenche_cartela tail_jogador num_sorteado (n-1))
+>                    return ([(Jogador nome_jogador tipo_cartela_jogador nova_cartela)] ++ lista_rec)
 
 
 > calcula_turno :: Game -> IO ()
 > calcula_turno game_state = do 
 >                -- Extrai campos do estado anterior
->                let new_jogadores         = jogadores(game_state)
+>                let old_jogadores         = jogadores(game_state)
 >                let new_rodada            = rodada(game_state) + 1
 >                let old_numeros_sorteados = numeros_sorteados(game_state)
 >                let old_numeros_para_sorteio  = numeros_para_sorteio(game_state)
@@ -109,12 +146,14 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >                    -- os números na lista para sorteio
 >                    return ()
 >                else 
+>                    do
 >                    -- Sorteia um numero, tirando a cabeça da lista de numeros para
 >                    -- sorteio que está embaralhada
 >                    let num_sorteado = (head old_numeros_para_sorteio)
 >                    let new_numeros_para_sorteio = (tail old_numeros_para_sorteio)
 >                    let new_numeros_sorteados = num_sorteado:old_numeros_sorteados
 >                    putStrLn ("Rodada: " ++ (show new_rodada) ++ " Numero sorteado: " ++ (show num_sorteado))
+>                    new_jogadores <- (preenche_cartela old_jogadores num_sorteado (length old_jogadores))
 >                    --if (null new_numeros_para_sorteio) == False then
 >                    --     putStrLn ("numeros_para_sorteio " ++ (show new_numeros_para_sorteio))
 >                    --else
