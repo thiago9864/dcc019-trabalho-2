@@ -93,7 +93,7 @@ Fonte: https://stackoverflow.com/questions/2578930/understanding-this-matrix-tra
 >                         if (ja_saiu x) == True then 
 >                            putStr ("[x] ")
 >                         else 
->                            putStr ("[]  ")
+>                            putStr ("[ ] ")
 > print_cartela_aux (x:xs) = do 
 >                         putStr (show (numero x))
 >                         if (numero x) < 10 then
@@ -103,7 +103,7 @@ Fonte: https://stackoverflow.com/questions/2578930/understanding-this-matrix-tra
 >                         if (ja_saiu x) == True then 
 >                            putStr ("[x] ")
 >                         else 
->                            putStr ("[]  ")
+>                            putStr ("[ ] ")
 >                         print_cartela_aux xs
 
 
@@ -269,6 +269,7 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >                    let num_sorteado = (head old_numeros_para_sorteio)
 >                    let new_numeros_para_sorteio = (tail old_numeros_para_sorteio)
 >                    let new_numeros_sorteados = num_sorteado:old_numeros_sorteados
+>                    putStrLn("\n----------------------------------")
 >                    putStrLn ("Rodada: " ++ (show new_rodada) ++ " Numero sorteado: " ++ (show num_sorteado))
 >                    new_jogadores <- (preenche_cartela old_jogadores num_sorteado (length old_jogadores))
 >                    new_vencedores <- (verifica_vitoria new_jogadores (length new_jogadores))
@@ -281,6 +282,7 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >                    --else
 >                    --     putStrLn ("numeros_sorteados []")
 >                    -- chama recursão para o próximo turno
+>                    print_cartela new_jogadores
 >                    calcula_turno (Game 
 >                                   new_jogadores 
 >                                   new_rodada 
@@ -294,9 +296,9 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 > finalizacao game_state = do 
 >          let lista_vencedores = vencedores(game_state)
 >          if (length lista_vencedores) == 1 then
->               putStrLn ("Parabens " ++ (lista_vencedores !! 0))
+>               putStrLn ("\n==================================\nParabens " ++ (lista_vencedores !! 0) ++ "\n==================================\n")
 >          else
->               putStrLn ("Parabens " ++ (lista_vencedores !! 0))
+>               putStrLn ("\nParabens " ++ (lista_vencedores !! 0))
 
 ------------------------ Main Loop ---------------------------
 
@@ -314,7 +316,9 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >           rndIO <- randomIO
 >           -- Configura parâmetros do objeto Game
 >           new_jogadores <- (inicia_jogadores num_jogadores)
+>           putStrLn ""
 >           print_cartela new_jogadores
+>           putStrLn ""
 >           let new_rodada = 0
 >           let new_numeros_sorteados = []
 >           let new_numeros_para_sorteio = (shuffle (mkStdGen rndIO) [1..75])
