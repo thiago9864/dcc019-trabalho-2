@@ -33,7 +33,8 @@ que inicia toda preenchida com numeros de 1 a 75
 >    jogadores :: [Jogador],
 >    rodada :: Int,
 >    numeros_sorteados :: [Int],
->    numeros_para_sorteio :: [Int]
+>    numeros_para_sorteio :: [Int],
+>    vencedores :: [String]
 > } deriving (Eq, Show, Read)
 
 Algoritmo para embaralhar listas
@@ -47,6 +48,64 @@ Fonte: https://stackoverflow.com/questions/14692059/how-to-shuffle-a-list
 >      newGen = snd randomTuple
 >      randomElem = list !! randomIndex
 >      newList = take randomIndex list ++ drop (randomIndex+1) list
+
+Função que calcula a transposta de uma lista bidimensional quadrada
+Fonte: https://stackoverflow.com/questions/2578930/understanding-this-matrix-transposition-function-in-haskell
+
+> transpose :: [[a]] -> [[a]]
+> transpose ([]:_) = []
+> transpose x = (map head x) : transpose (map tail x)
+
+> print_cartela :: [Jogador] -> IO()
+> print_cartela [] = return()
+> print_cartela [x] = do 
+>                     if (tipo_cartela x) == "c" then 
+>                         putStr ("\n" ++ (nome x) ++ ": coluna" ++ "\n")
+>                     else 
+>                        putStr ("\n" ++ (nome x) ++ ": linha" ++ "\n")
+>                     todas_cartelas (cartela x)
+>                     putStrLn ""
+> print_cartela (x:xs) = do 
+>                     if (tipo_cartela x) == "c" then 
+>                         putStr ("\n" ++ (nome x) ++ ": coluna" ++ "\n")
+>                     else 
+>                        putStr ("\n" ++ (nome x) ++ ": linha" ++ "\n")
+>                     todas_cartelas (cartela x)
+>                     putStrLn ""
+>                     print_cartela xs 
+
+> todas_cartelas :: [[ItemCartela]] -> IO()
+> todas_cartelas [] = return()
+> todas_cartelas [x] = print_cartela_aux x
+> todas_cartelas (x:xs) = do 
+>                         print_cartela_aux x
+>                         putStrLn ""
+>                         todas_cartelas xs
+
+> print_cartela_aux :: [ItemCartela] -> IO()
+> print_cartela_aux [] = return()
+> print_cartela_aux [x] = do 
+>                         putStr (show (numero x))
+>                         if (numero x) < 10 then
+>                            putStr "  "
+>                         else
+>                            putStr " "
+>                         if (ja_saiu x) == True then 
+>                            putStr ("[x] ")
+>                         else 
+>                            putStr ("[]  ")
+> print_cartela_aux (x:xs) = do 
+>                         putStr (show (numero x))
+>                         if (numero x) < 10 then
+>                            putStr "  "
+>                         else
+>                            putStr " "
+>                         if (ja_saiu x) == True then 
+>                            putStr ("[x] ")
+>                         else 
+>                            putStr ("[]  ")
+>                         print_cartela_aux xs
+
 
 ---------------------- Inicialização -------------------------
 
@@ -87,7 +146,6 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 
 > inicia_jogadores :: Int -> IO([Jogador])
 > inicia_jogadores num_jogadores = (inicia_jogadores_aux num_jogadores 1)
-    
 
 ------------------------- Turnos -----------------------------
 
@@ -132,6 +190,59 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >                    lista_rec <- (preenche_cartela tail_jogador num_sorteado (n-1))
 >                    return ([(Jogador nome_jogador tipo_cartela_jogador nova_cartela)] ++ lista_rec)
 
+> verifica_vitoria_aux_linha2 :: [ItemCartela] -> Int -> IO(Bool)
+> verifica_vitoria_aux_linha2 lista_item n = do
+>                if n == 0 then 
+>                    return True
+>                else
+>                    do
+>                    let head_item = (head lista_item)
+>                    let tail_item = (tail lista_item)  
+>                    let old_ja_saiu = ja_saiu(head_item)
+>                    lista_rec <- (verifica_vitoria_aux_linha2 tail_item (n-1))
+>                    return (old_ja_saiu && lista_rec) 
+
+> verifica_vitoria_aux_linha :: [[ItemCartela]] -> Int -> IO(Bool)
+> verifica_vitoria_aux_linha lista_linha n = do
+>                if n == 0 then 
+>                    return False
+>                else
+>                    do
+>                    let head_linha = (head lista_linha)
+>                    let tail_linha = (tail lista_linha)  
+>                    is_vencedor <- (verifica_vitoria_aux_linha2 head_linha (length head_linha))
+>                    valor_rec <- (verifica_vitoria_aux_linha tail_linha (n-1))
+>                    return (is_vencedor || valor_rec)           
+
+> verifica_vitoria :: [Jogador] -> Int -> IO([String])
+> verifica_vitoria lista_jogadores n = do
+>                if n == 0 then 
+>                    return []
+>                else
+>                    do
+>                    let head_jogador = (head lista_jogadores)
+>                    let tail_jogador = (tail lista_jogadores)        
+>                    let old_cartela = cartela(head_jogador)                         
+>                    let tipo_cartela_jogador = tipo_cartela(head_jogador)
+>                    let nome_jogador = nome(head_jogador)
+>                    let transposta = (transpose old_cartela)
+>
+>                    is_vencedor_linha <- (verifica_vitoria_aux_linha old_cartela (length old_cartela)) 
+>                    is_vencedor_coluna <- (verifica_vitoria_aux_linha transposta (length transposta))
+>
+>                    if tipo_cartela_jogador == "l" && is_vencedor_linha == True then 
+>                        do
+>                        lista_rec <- (verifica_vitoria tail_jogador (n-1))
+>                        return ([nome_jogador] ++ lista_rec) 
+>                    else 
+>                        if tipo_cartela_jogador == "c" && is_vencedor_coluna == True then  
+>                            do
+>                            lista_rec <- (verifica_vitoria tail_jogador (n-1))
+>                            return lista_rec
+>                        else 
+>                            return []
+                        
+
 
 > calcula_turno :: Game -> IO ()
 > calcula_turno game_state = do 
@@ -140,11 +251,17 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >                let new_rodada            = rodada(game_state) + 1
 >                let old_numeros_sorteados = numeros_sorteados(game_state)
 >                let old_numeros_para_sorteio  = numeros_para_sorteio(game_state)
+>                let old_vencedores  = vencedores(game_state)
 >                let qtd_para_sorteio = (length old_numeros_para_sorteio)
->                if qtd_para_sorteio <= 0 || new_rodada > 75 then 
+>                if qtd_para_sorteio <= 0 || new_rodada > 75 || ((null old_vencedores) == False) then 
 >                    -- Termina a recursão quando encontrar um vencedor ou terminar
 >                    -- os números na lista para sorteio
->                    return ()
+>                    if ((null old_vencedores) == False) then
+>                        do
+>                        (finalizacao game_state)
+>                        return ()
+>                    else 
+>                        return ()
 >                else 
 >                    do
 >                    -- Sorteia um numero, tirando a cabeça da lista de numeros para
@@ -154,6 +271,7 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >                    let new_numeros_sorteados = num_sorteado:old_numeros_sorteados
 >                    putStrLn ("Rodada: " ++ (show new_rodada) ++ " Numero sorteado: " ++ (show num_sorteado))
 >                    new_jogadores <- (preenche_cartela old_jogadores num_sorteado (length old_jogadores))
+>                    new_vencedores <- (verifica_vitoria new_jogadores (length new_jogadores))
 >                    --if (null new_numeros_para_sorteio) == False then
 >                    --     putStrLn ("numeros_para_sorteio " ++ (show new_numeros_para_sorteio))
 >                    --else
@@ -167,9 +285,18 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >                                   new_jogadores 
 >                                   new_rodada 
 >                                   new_numeros_sorteados
->                                   new_numeros_para_sorteio)    
+>                                   new_numeros_para_sorteio
+>                                   new_vencedores)    
 
 ----------------------- Finalizacao --------------------------
+
+> finalizacao :: Game -> IO()
+> finalizacao game_state = do 
+>          let lista_vencedores = vencedores(game_state)
+>          if (length lista_vencedores) == 1 then
+>               putStrLn ("Parabens " ++ (lista_vencedores !! 0))
+>          else
+>               putStrLn ("Parabens " ++ (lista_vencedores !! 0))
 
 ------------------------ Main Loop ---------------------------
 
@@ -187,6 +314,7 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >           rndIO <- randomIO
 >           -- Configura parâmetros do objeto Game
 >           new_jogadores <- (inicia_jogadores num_jogadores)
+>           print_cartela new_jogadores
 >           let new_rodada = 0
 >           let new_numeros_sorteados = []
 >           let new_numeros_para_sorteio = (shuffle (mkStdGen rndIO) [1..75])
@@ -194,5 +322,6 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >                          new_jogadores 
 >                          new_rodada 
 >                          new_numeros_sorteados
->                          new_numeros_para_sorteio) 
+>                          new_numeros_para_sorteio
+>                          []) 
 >           return ()
