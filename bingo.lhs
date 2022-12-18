@@ -91,6 +91,45 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 
 ------------------------- Turnos -----------------------------
 
+> preenche_cartela :: [Jogador] -> Int -> [Jogador]
+> preenche_cartela (head_jogador:tail_jogadores) num_sorteado = do 
+>                let old_cartela  = cartela(head_jogador)
+
+
+> calcula_turno :: Game -> IO ()
+> calcula_turno game_state = do 
+>                -- Extrai campos do estado anterior
+>                let new_jogadores         = jogadores(game_state)
+>                let new_rodada            = rodada(game_state) + 1
+>                let old_numeros_sorteados = numeros_sorteados(game_state)
+>                let old_numeros_para_sorteio  = numeros_para_sorteio(game_state)
+>                let qtd_para_sorteio = (length old_numeros_para_sorteio)
+>                if qtd_para_sorteio <= 0 || new_rodada > 75 then 
+>                    -- Termina a recursão quando encontrar um vencedor ou terminar
+>                    -- os números na lista para sorteio
+>                    return ()
+>                else 
+>                    -- Sorteia um numero, tirando a cabeça da lista de numeros para
+>                    -- sorteio que está embaralhada
+>                    let num_sorteado = (head old_numeros_para_sorteio)
+>                    let new_numeros_para_sorteio = (tail old_numeros_para_sorteio)
+>                    let new_numeros_sorteados = num_sorteado:old_numeros_sorteados
+>                    putStrLn ("Rodada: " ++ (show new_rodada) ++ " Numero sorteado: " ++ (show num_sorteado))
+>                    --if (null new_numeros_para_sorteio) == False then
+>                    --     putStrLn ("numeros_para_sorteio " ++ (show new_numeros_para_sorteio))
+>                    --else
+>                    --     putStrLn ("numeros_para_sorteio []")
+>                    --if (null new_numeros_sorteados) == False then 
+>                    --     putStrLn ("numeros_sorteados " ++ (show new_numeros_sorteados))
+>                    --else
+>                    --     putStrLn ("numeros_sorteados []")
+>                    -- chama recursão para o próximo turno
+>                    calcula_turno (Game 
+>                                   new_jogadores 
+>                                   new_rodada 
+>                                   new_numeros_sorteados
+>                                   new_numeros_para_sorteio)    
+
 ----------------------- Finalizacao --------------------------
 
 ------------------------ Main Loop ---------------------------
@@ -105,4 +144,16 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >            putStrLn "\nErro: Número de jogadores invalido!"
 >            main
 >        else
+>           do 
+>           rndIO <- randomIO
+>           -- Configura parâmetros do objeto Game
+>           new_jogadores <- (inicia_jogadores num_jogadores)
+>           let new_rodada = 0
+>           let new_numeros_sorteados = []
+>           let new_numeros_para_sorteio = (shuffle (mkStdGen rndIO) [1..75])
+>           calcula_turno (Game 
+>                          new_jogadores 
+>                          new_rodada 
+>                          new_numeros_sorteados
+>                          new_numeros_para_sorteio) 
 >           return ()
