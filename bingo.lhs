@@ -48,6 +48,57 @@ Fonte: https://stackoverflow.com/questions/14692059/how-to-shuffle-a-list
 >      randomElem = list !! randomIndex
 >      newList = take randomIndex list ++ drop (randomIndex+1) list
 
+> print_cartela :: [Jogador] -> IO()
+> print_cartela [] = return()
+> print_cartela [x] = do 
+>                     if (tipo_cartela x) == "c" then 
+>                         putStr ("\n" ++ (nome x) ++ ": coluna" ++ "\n")
+>                     else 
+>                        putStr ("\n" ++ (nome x) ++ ": linha" ++ "\n")
+>                     todas_cartelas (cartela x)
+>                     putStrLn ""
+> print_cartela (x:xs) = do 
+>                     if (tipo_cartela x) == "c" then 
+>                         putStr ("\n" ++ (nome x) ++ ": coluna" ++ "\n")
+>                     else 
+>                        putStr ("\n" ++ (nome x) ++ ": linha" ++ "\n")
+>                     todas_cartelas (cartela x)
+>                     putStrLn ""
+>                     print_cartela xs 
+
+> todas_cartelas :: [[ItemCartela]] -> IO()
+> todas_cartelas [] = return()
+> todas_cartelas [x] = print_cartela_aux x
+> todas_cartelas (x:xs) = do 
+>                         print_cartela_aux x
+>                         putStrLn ""
+>                         todas_cartelas xs
+
+> print_cartela_aux :: [ItemCartela] -> IO()
+> print_cartela_aux [] = return()
+> print_cartela_aux [x] = do 
+>                         putStr (show (numero x))
+>                         if (numero x) < 10 then
+>                            putStr "  "
+>                         else
+>                            putStr " "
+>                         if (ja_saiu x) == True then 
+>                            putStr ("[x] ")
+>                         else 
+>                            putStr ("[]  ")
+> print_cartela_aux (x:xs) = do 
+>                         putStr (show (numero x))
+>                         if (numero x) < 10 then
+>                            putStr "  "
+>                         else
+>                            putStr " "
+>                         if (ja_saiu x) == True then 
+>                            putStr ("[x] ")
+>                         else 
+>                            putStr ("[]  ")
+>                         print_cartela_aux xs
+
+
 ---------------------- Inicialização -------------------------
 
 Recebe uma lista de numeros inteiros e retorna os 5 primeiros valores também como uma lista
@@ -87,7 +138,6 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 
 > inicia_jogadores :: Int -> IO([Jogador])
 > inicia_jogadores num_jogadores = (inicia_jogadores_aux num_jogadores 1)
-    
 
 ------------------------- Turnos -----------------------------
 
@@ -187,6 +237,7 @@ Função principal, chamada na main que cria os jogadores e retorna uma lista de
 >           rndIO <- randomIO
 >           -- Configura parâmetros do objeto Game
 >           new_jogadores <- (inicia_jogadores num_jogadores)
+>           print_cartela new_jogadores
 >           let new_rodada = 0
 >           let new_numeros_sorteados = []
 >           let new_numeros_para_sorteio = (shuffle (mkStdGen rndIO) [1..75])
